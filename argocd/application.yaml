@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cicd-analyzer
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: cicd-analyzer
+    app.kubernetes.io/part-of: cicd-analyzer
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: cicd-analyzer
+  source:
+    repoURL: https://github.com/your-org/cicd-analyzer.git
+    targetRevision: main
+    path: helm/cicd-analyzer
+    helm:
+      releaseName: cicd-analyzer
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cicd-analyzer-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

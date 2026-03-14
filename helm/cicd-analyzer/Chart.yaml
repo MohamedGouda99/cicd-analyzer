@@ -1,0 +1,15 @@
+apiVersion: v2
+name: cicd-analyzer
+description: Intelligent CI/CD Pipeline Analyzer - FastAPI backend with React frontend
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - cicd
+  - pipeline
+  - analyzer
+  - devops
+maintainers:
+  - name: cicd-analyzer-team
+sources:
+  - https://github.com/your-org/cicd-analyzer

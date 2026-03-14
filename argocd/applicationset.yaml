@@ -1,0 +1,69 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cicd-analyzer
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - env: dev
+            targetRevision: develop
+            autoSync: true
+            prune: true
+          - env: staging
+            targetRevision: staging
+            autoSync: true
+            prune: true
+          - env: prod
+            targetRevision: main
+            autoSync: false
+            prune: false
+  template:
+    metadata:
+      name: "cicd-analyzer-{{ .env }}"
+      namespace: argocd
+      labels:
+        app.kubernetes.io/name: cicd-analyzer
+        app.kubernetes.io/part-of: cicd-analyzer
+        environment: "{{ .env }}"
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: cicd-analyzer
+      source:
+        repoURL: https://github.com/your-org/cicd-analyzer.git
+        targetRevision: "{{ .targetRevision }}"
+        path: helm/cicd-analyzer
+        helm:
+          releaseName: "cicd-analyzer-{{ .env }}"
+          valueFiles:
+            - values.yaml
+            - ../../argocd/overlays/{{ .env }}/values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "cicd-analyzer-{{ .env }}"
+      syncPolicy:
+        automated:
+          prune: "{{ .prune }}"
+          selfHeal: "{{ .autoSync }}"
+          allowEmpty: false
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+          - ServerSideApply=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      revisionHistoryLimit: 10
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas

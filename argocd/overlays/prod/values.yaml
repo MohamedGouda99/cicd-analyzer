@@ -1,0 +1,67 @@
+# Production environment overrides
+
+backend:
+  replicaCount: 3
+
+  image:
+    tag: "1.0.0"
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+  config:
+    OPENAI_MODEL: "gpt-4o"
+    CORS_ORIGINS: "https://cicd-analyzer.example.com"
+    LOG_LEVEL: "warning"
+    WORKERS: "4"
+
+  # In production, use external-secrets-operator or sealed-secrets
+  existingSecret: "cicd-analyzer-backend-prod"
+
+frontend:
+  replicaCount: 3
+
+  image:
+    tag: "1.0.0"
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+ingress:
+  host: cicd-analyzer.example.com
+  tls:
+    enabled: true
+    secretName: cicd-analyzer-prod-tls
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/rate-limit: "50"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+networkPolicy:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2

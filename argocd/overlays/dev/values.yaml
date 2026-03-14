@@ -1,0 +1,58 @@
+# Development environment overrides
+
+backend:
+  replicaCount: 1
+
+  image:
+    tag: "dev-latest"
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: false
+
+  config:
+    OPENAI_MODEL: "gpt-4o-mini"
+    CORS_ORIGINS: "https://dev.cicd-analyzer.example.com"
+    LOG_LEVEL: "debug"
+    WORKERS: "1"
+
+frontend:
+  replicaCount: 1
+
+  image:
+    tag: "dev-latest"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+ingress:
+  host: dev.cicd-analyzer.example.com
+  tls:
+    enabled: true
+    secretName: cicd-analyzer-dev-tls
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+
+networkPolicy:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false

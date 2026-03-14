@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: cicd-analyzer
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: CI/CD Pipeline Analyzer project
+  sourceRepos:
+    - "https://github.com/your-org/cicd-analyzer.git"
+  destinations:
+    - namespace: cicd-analyzer-dev
+      server: https://kubernetes.default.svc
+    - namespace: cicd-analyzer-staging
+      server: https://kubernetes.default.svc
+    - namespace: cicd-analyzer-prod
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+  orphanedResources:
+    warn: true
+  roles:
+    - name: admin
+      description: Full access to cicd-analyzer project
+      policies:
+        - p, proj:cicd-analyzer:admin, applications, *, cicd-analyzer/*, allow
+      groups:
+        - cicd-analyzer-admins
+    - name: readonly
+      description: Read-only access
+      policies:
+        - p, proj:cicd-analyzer:readonly, applications, get, cicd-analyzer/*, allow
+      groups:
+        - cicd-analyzer-viewers

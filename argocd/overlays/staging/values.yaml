@@ -1,0 +1,62 @@
+# Staging environment overrides
+
+backend:
+  replicaCount: 2
+
+  image:
+    tag: "staging-latest"
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+  config:
+    OPENAI_MODEL: "gpt-4o"
+    CORS_ORIGINS: "https://staging.cicd-analyzer.example.com"
+    LOG_LEVEL: "info"
+    WORKERS: "2"
+
+frontend:
+  replicaCount: 2
+
+  image:
+    tag: "staging-latest"
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+ingress:
+  host: staging.cicd-analyzer.example.com
+  tls:
+    enabled: true
+    secretName: cicd-analyzer-staging-tls
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+
+networkPolicy:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

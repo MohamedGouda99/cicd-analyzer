@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cicd-analyzer.fullname" . }}-backend
+  labels:
+    {{- include "cicd-analyzer.backend.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.backend.config }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}

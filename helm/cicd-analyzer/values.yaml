@@ -1,0 +1,147 @@
+# -- Global settings
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Docker image registry (shared)
+imageRegistry: ""
+
+# -- Backend configuration
+backend:
+  replicaCount: 2
+
+  image:
+    repository: cicd-analyzer/backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8000
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+  config:
+    OPENAI_MODEL: "gpt-4o"
+    CORS_ORIGINS: "https://cicd-analyzer.example.com"
+    LOG_LEVEL: "info"
+    WORKERS: "2"
+
+  # -- Secret values (base64-encoded)
+  # In production, use external-secrets or sealed-secrets instead
+  secrets:
+    OPENAI_API_KEY: "Y2hhbmdlLW1l"          # changeme
+    SUPABASE_URL: "Y2hhbmdlLW1l"             # changeme
+    SUPABASE_KEY: "Y2hhbmdlLW1l"             # changeme
+    GITHUB_TOKEN: "Y2hhbmdlLW1l"             # changeme
+    GITHUB_WEBHOOK_SECRET: "Y2hhbmdlLW1l"    # changeme
+
+  # -- Use an existing secret instead of creating one
+  existingSecret: ""
+
+  probes:
+    liveness:
+      path: /api/health
+      initialDelaySeconds: 15
+      periodSeconds: 20
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /api/health
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    startup:
+      path: /api/health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      failureThreshold: 12
+
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Frontend configuration
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: cicd-analyzer/frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 20
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  host: cicd-analyzer.example.com
+  tls:
+    enabled: true
+    secretName: cicd-analyzer-tls
+
+# -- NetworkPolicy configuration
+networkPolicy:
+  enabled: true
+
+# -- ServiceAccount configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# -- Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
