@@ -1,0 +1,19 @@
+# =============================================================================
+# CI/CD Pipeline Analyzer - Terraform Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in the values:
+#   cp terraform.tfvars.example terraform.tfvars
+# =============================================================================
+
+project_id    = "your-gcp-project-id"
+region        = "us-central1"
+openai_model  = "gpt-4o-mini"
+max_instances = 5
+cors_origins  = ["https://your-frontend-domain.run.app"]
+
+# Sensitive values - populate before running terraform apply
+openai_api_key        = "sk-your-openai-api-key"
+github_token          = "ghp_your-github-token"
+github_webhook_secret = "your-webhook-secret"
+supabase_url          = "https://your-project.supabase.co"
+supabase_key          = "your-supabase-anon-key"
